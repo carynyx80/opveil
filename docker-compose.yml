@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: opveil-postgres
+    environment:
+      POSTGRES_USER: opveil
+      POSTGRES_PASSWORD: opveil
+      POSTGRES_DB: opveil
+    ports:
+      - "5432:5432"
+    volumes:
+      - opveil-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opveil"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: opveil-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - opveil-redisdata:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    profiles: ["cache"]
+
+volumes:
+  opveil-pgdata:
+  opveil-redisdata:

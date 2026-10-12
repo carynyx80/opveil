@@ -1,0 +1,133 @@
+// Production persistence: PostgreSQL + Prisma.
+// MVP runs without a database (file-backed history in ./data + in-memory cache).
+// To enable Postgres: set DATABASE_URL, run `npx prisma db push`, restart.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AnalysisStatus {
+  PENDING
+  COMPLETE
+  FAILED
+}
+
+model ContractAnalysis {
+  id             String         @id
+  chain          String
+  address        String
+  blockNumber    BigInt
+  codeHash       String
+  byteSize       Int
+  selectorCount  Int            @default(0)
+  findingCount   Int            @default(0)
+  isProxy        Boolean        @default(false)
+  proxyPattern   String         @default("none-detected")
+  sourceVerified Boolean        @default(false)
+  engineVersion  String
+  status         AnalysisStatus @default(COMPLETE)
+  summary        String         @default("")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  bytecode   BytecodeArtifact?
+  functions  FunctionCandidate[]
+  findings   SecurityFinding[]
+  proxy      ProxyResolution?
+  ai         AIExplanation?
+  decompiled String         @default("") @db.Text
+
+  @@unique([chain, address, codeHash])
+  @@index([chain, address])
+  @@index([createdAt])
+}
+
+model BytecodeArtifact {
+  id         String           @id @default(cuid())
+  analysisId String           @unique
+  analysis   ContractAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  bytecode   String           @db.Text
+  normalized String           @default("") @db.Text
+  createdAt  DateTime         @default(now())
+}
+
+model FunctionCandidate {
+  id            String           @id @default(cuid())
+  analysisId    String
+  analysis      ContractAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  selector      String
+  signature     String?
+  confidence    String
+  evidence      String           @default("[]")
+  opcodeOffsets String           @default("[]")
+
+  @@index([analysisId])
+  @@index([selector])
+}
+
+model SecurityFinding {
+  id         String           @id @default(cuid())
+  analysisId String
+  analysis   ContractAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  findingKey String
+  title      String
+  severity   String
+  confidence String
+  evidence   String           @default("[]")
+  impact     String           @default("")
+  createdAt  DateTime         @default(now())
+
+  @@index([analysisId])
+}
+
+model ProxyResolution {
+  id             String           @id @default(cuid())
+  analysisId     String           @unique
+  analysis       ContractAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  isProxy        Boolean
+  pattern        String
+  implementation String?
+  admin          String?
+  beacon         String?
+  provenance     String           @default("[]")
+}
+
+model AIExplanation {
+  id         String           @id @default(cuid())
+  analysisId String           @unique
+  analysis   ContractAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  model      String?
+  summary    String           @db.Text
+  bullets    String           @default("[]")
+  createdAt  DateTime         @default(now())
+}
+
+model ComparisonReport {
+  id        String   @id @default(cuid())
+  chainA    String
+  addressA  String
+  chainB    String
+  addressB  String
+  result    String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model AnalysisJob {
+  id        String   @id @default(cuid())
+  chain     String
+  address   String
+  status    AnalysisStatus @default(PENDING)
+  attempts  Int      @default(0)
+  error     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
