@@ -13,10 +13,15 @@ export const metadata: Metadata = {
   description:
     "Decode, inspect, and understand EVM smart contracts on Robinhood Chain and BNB Smart Chain. Evidence-backed bytecode intelligence.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
   openGraph: {
     title: "Opveil — Uncover the code beneath",
     description: "Evidence-backed EVM contract intelligence for Robinhood Chain and BNB Smart Chain.",
     type: "website",
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Opveil logo" }],
   },
 };
 

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function Footer() {
@@ -5,7 +6,10 @@ export function Footer() {
     <footer className="border-t border-[var(--ov-border)] bg-[var(--ov-elevated)]">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
-          <p className="text-sm font-bold">Opveil</p>
+          <p className="flex items-center gap-2 text-sm font-bold">
+            <Image src="/logo.png" alt="Opveil logo" width={22} height={22} className="rounded-md" />
+            Opveil
+          </p>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-[var(--ov-muted)]">
             Uncover the code beneath. Read-only EVM contract intelligence for Robinhood Chain and BNB Smart Chain.
           </p>
