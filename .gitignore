@@ -3,6 +3,7 @@ node_modules/
 out/
 test-results/
 playwright-report/
+*.tsbuildinfo
 data/*.json
 !data/.gitkeep
 .env.local
